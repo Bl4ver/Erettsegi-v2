@@ -1,8 +1,8 @@
 /* ==========================================
    GITHUB BEÁLLÍTÁSOK (Ide írd a saját adataidat!)
    ========================================== */
-const GITHUB_USER = "A_TE_FELHASZNALONEVED"; // pl. "KovacsBela"
-const GITHUB_REPO = "A_TE_REPOZITORIUMOD";  // pl. "erettsegi-oldal"
+const GITHUB_USER = "Bl4ver"; // pl. "KovacsBela"
+const GITHUB_REPO = "Erettsegi-v2";  // pl. "erettsegi-oldal"
 const ROOT_FOLDER = "Erettsegi_Adatok";     // A főmappa neve a repón belül
 
 // GitHub API végpont (A 'main' branchet olvassa)
