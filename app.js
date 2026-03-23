@@ -1,35 +1,36 @@
 /* ==========================================
-   GITHUB BEÁLLÍTÁSOK (Ide írd a saját adataidat!)
-   ========================================== */
-const GITHUB_USER = "Bl4ver"; // pl. "KovacsBela"
-const GITHUB_REPO = "Erettsegi-v2";  // pl. "erettsegi-oldal"
-const ROOT_FOLDER = "Erettsegi_Adatok";     // A főmappa neve a repón belül
-
-// GitHub API végpont (A 'main' branchet olvassa)
-const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/git/trees/main?recursive=1`;
-const RAW_URL_BASE = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/`;
-
-/* ==========================================
-   OOP ALKALMAZÁS LOGIKA
+   HELYI ADATBÁZIS OLVASÓ LOGIKA ÉS UI KEZELÉS
    ========================================== */
 
 class App {
     constructor() {
-        this.fileSystem = {}; // Ide építjük fel a mapparendszert
+        this.fileSystem = {}; 
         
         // UI Elemek
         this.mainTabsUI = document.getElementById('mainTabs');
         this.subTabsUI = document.getElementById('subTabs');
-        this.fileListUI = document.getElementById('fileList');
+        this.fileGridUI = document.getElementById('fileGrid');
         this.contentView = document.getElementById('contentView');
         this.syncStatus = document.getElementById('syncStatus');
+        this.searchInput = document.getElementById('searchInput');
         
-        // Állapot
+        // ÚJ UI Elem: A Tételek szekció dinamikus címe
+        this.fileListTitleUI = document.getElementById('fileListTitle');
+        
+        // Hamburger menü és oldalsáv
+        this.hamburgerBtn = document.getElementById('hamburgerMenu');
+        this.sidebar = document.querySelector('.resizable-sidebar');
+        
+        // Állapot (State)
         this.activeSubject = null;
         this.activeCategory = null;
+        this.currentFilePath = null;
 
+        // Inicializálások
         this.initTheme();
-        this.fetchGitHubData();
+        this.initSearch();
+        this.initHamburger();
+        this.loadLocalData();
     }
 
     // 1. Téma kezelés (Sötét/Világos)
@@ -45,144 +46,248 @@ class App {
         });
     }
 
-    // 2. A MÁGIA: Adatok letöltése GitHubról
-    async fetchGitHubData() {
-        try {
-            const response = await fetch(GITHUB_API_URL);
-            if (!response.ok) throw new Error("Nem sikerült elérni a GitHubot.");
-            
-            const data = await response.json();
-            this.buildFileSystem(data.tree);
-            
-            this.syncStatus.textContent = "✅ Szinkronizálva";
-            this.syncStatus.style.color = "green";
-            
-            this.renderMainTabs();
-        } catch (error) {
-            console.error(error);
-            this.syncStatus.textContent = "❌ Hiba a szinkronizáláskor";
-            this.syncStatus.style.color = "red";
-            this.contentView.innerHTML = `<h3>Kérlek, állítsd be a GitHub adataidat az app.js-ben!</h3>`;
-        }
-    }
-
-    // 3. GitHub "lapos" listájából strukturált objektum építése
-    buildFileSystem(treeArray) {
-        // Csak azokat a fájlokat nézzük, amik a ROOT_FOLDER-ben vannak és docx/xlsx kiterjesztésűek
-        const files = treeArray.filter(item => 
-            item.path.startsWith(ROOT_FOLDER + "/") && 
-            item.type === "blob" &&
-            (item.path.endsWith('.docx') || item.path.endsWith('.xlsx'))
-        );
-
-        files.forEach(file => {
-            // Path feldarabolása: Erettsegi_Adatok / Irodalom / Korszakok / romantika.docx
-            const parts = file.path.replace(ROOT_FOLDER + "/", "").split("/");
-            if (parts.length >= 3) {
-                const subject = parts[0];  // Irodalom
-                const category = parts[1]; // Korszakok
-                const fileName = parts[2]; // romantika.docx
-                
-                if (!this.fileSystem[subject]) this.fileSystem[subject] = {};
-                if (!this.fileSystem[subject][category]) this.fileSystem[subject][category] = [];
-                
-                this.fileSystem[subject][category].push({
-                    name: fileName,
-                    path: file.path
-                });
+    // 2. Hamburger menü kattintás esemény
+    initHamburger() {
+        this.hamburgerBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                this.sidebar.classList.toggle('open');
+            } else {
+                this.sidebar.classList.toggle('hidden');
             }
         });
     }
 
-    // 4. UI: Főtárgyak (1. szint) renderelése
+    // 3. Kereső logika (Élő szűrés)
+    initSearch() {
+        this.searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            
+            if (query.length < 2) {
+                // Ha törli a keresést, visszatöltjük a normál nézetet
+                if (this.activeCategory) {
+                    this.renderFileList();
+                } else {
+                    this.fileGridUI.innerHTML = '';
+                    this.fileListTitleUI.textContent = 'Tételek';
+                }
+                return;
+            }
+
+            // Globális keresés a teljes fileSystem-ben
+            const results = [];
+            for (const subj in this.fileSystem) {
+                for (const cat in this.fileSystem[subj]) {
+                    this.fileSystem[subj][cat].forEach(fileObj => {
+                        if (fileObj.name.toLowerCase().includes(query)) {
+                            results.push({ ...fileObj, subject: subj, category: cat });
+                        }
+                    });
+                }
+            }
+
+            this.renderSearchResults(results, query);
+        });
+    }
+
+    // 4. Adatok betöltése
+    async loadLocalData() {
+        try {
+            const response = await fetch('data.json');
+            if (!response.ok) throw new Error("Nem találom a data.json fájlt.");
+            
+            this.fileSystem = await response.json();
+            this.syncStatus.textContent = "✅ Rendszer kész";
+            this.syncStatus.style.color = "var(--text-muted)";
+            
+            this.restoreLastOpened(); 
+            
+        } catch (error) {
+            console.error(error);
+            this.syncStatus.textContent = "❌ Hiányzó adatok";
+            this.syncStatus.style.color = "red";
+            this.contentView.innerHTML = `
+                <div class="welcome-msg" style="color: red;">
+                    <h3>Hiba: Nincs data.json fájl!</h3>
+                    <p>Futtasd le a <b>generator.py</b> fájlt a mappádban!</p>
+                </div>`;
+        }
+    }
+
+    // MEMÓRIA
+    restoreLastOpened() {
+        const lastFile = localStorage.getItem('lastOpenedFile');
+        
+        if (lastFile) {
+            for (const subj in this.fileSystem) {
+                for (const cat in this.fileSystem[subj]) {
+                    const found = this.fileSystem[subj][cat].find(f => f.path === lastFile);
+                    if (found) {
+                        this.activeSubject = subj;
+                        this.activeCategory = cat;
+                        this.currentFilePath = lastFile;
+                        this.renderMainTabs();
+                        this.loadFileContent(found.path, found.name.endsWith('.xlsx'));
+                        return;
+                    }
+                }
+            }
+        }
+        
+        this.renderMainTabs();
+    }
+
+    // 5. UI: Főtárgyak
     renderMainTabs() {
         this.mainTabsUI.innerHTML = '';
         const subjects = Object.keys(this.fileSystem);
-        
         if (subjects.length === 0) return;
 
-        subjects.forEach((subject, index) => {
+        if (!this.activeSubject) this.activeSubject = subjects[0];
+
+        subjects.forEach((subject) => {
             const li = document.createElement('li');
             li.innerHTML = `📁 ${subject}`;
             
-            if (index === 0) {
-                li.classList.add('active');
-                this.activeSubject = subject;
-            }
+            if (subject === this.activeSubject) li.classList.add('active');
 
             li.addEventListener('click', () => {
                 this.mainTabsUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
                 li.classList.add('active');
                 this.activeSubject = subject;
+                
+                this.activeCategory = null; 
                 this.renderSubTabs();
             });
 
             this.mainTabsUI.appendChild(li);
         });
 
-        if (this.activeSubject) this.renderSubTabs();
+        this.renderSubTabs();
     }
 
-    // 5. UI: Kategóriák (2. szint) renderelése
+    // 6. UI: Kategóriák
     renderSubTabs() {
         this.subTabsUI.innerHTML = '';
-        this.fileListUI.innerHTML = ''; // Fájllista ürítése
+        this.fileGridUI.innerHTML = ''; 
+        this.searchInput.value = ''; 
+        this.fileListTitleUI.textContent = 'Tételek'; // Alaphelyzetbe állítjuk a címet
         
         const categories = Object.keys(this.fileSystem[this.activeSubject] || {});
         if (categories.length === 0) return;
 
-        categories.forEach((category, index) => {
+        categories.forEach((category) => {
             const li = document.createElement('li');
             li.textContent = category;
             
-            if (index === 0) {
-                li.classList.add('active');
-                this.activeCategory = category;
-            }
+            if (category === this.activeCategory) li.classList.add('active');
 
             li.addEventListener('click', () => {
                 this.subTabsUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
                 li.classList.add('active');
                 this.activeCategory = category;
+                
                 this.renderFileList();
             });
 
             this.subTabsUI.appendChild(li);
         });
 
-        if (this.activeCategory) this.renderFileList();
+        if (this.activeCategory) {
+            this.renderFileList();
+        }
     }
 
-    // 6. UI: Fájlok (3. szint) renderelése
+    // 7. UI: Fájl Kártyák listázása
     renderFileList() {
-        this.fileListUI.innerHTML = '';
+        this.fileGridUI.innerHTML = '';
+        
+        // JAVÍTÁS: A felirat frissítése a kategória nevére
+        if (this.activeCategory) {
+            this.fileListTitleUI.textContent = this.activeCategory;
+        }
+
         const files = this.fileSystem[this.activeSubject][this.activeCategory] || [];
 
         files.forEach(fileObj => {
-            const li = document.createElement('li');
-            const isExcel = fileObj.name.endsWith('.xlsx');
-            li.innerHTML = `${isExcel ? '📊' : '📄'} ${fileObj.name.replace(/\.[^/.]+$/, "")}`; // Kiterjesztés levágása a névről
-            
-            li.addEventListener('click', () => {
-                this.fileListUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
-                li.classList.add('active');
-                this.loadFileContent(fileObj.path, isExcel);
-            });
-
-            this.fileListUI.appendChild(li);
+            const cleanName = fileObj.name.replace(/\.[^/.]+$/, "");
+            const card = this.createFileCard(fileObj, cleanName);
+            this.fileGridUI.appendChild(card);
         });
     }
 
-    // 7. Fájl letöltése és megjelenítése (Mammoth / SheetJS)
-    async loadFileContent(repoPath, isExcel) {
-        this.contentView.innerHTML = '<div class="welcome-msg"><h3>Fájl letöltése...</h3></div>';
+    // Keresési eredmények renderelése
+    renderSearchResults(results, query) {
+        this.fileGridUI.innerHTML = '';
         
-        // Nyers fájl URL-je a GitHubon
-        const fileUrl = RAW_URL_BASE + repoPath;
+        // Cím módosítása keresés közben
+        this.fileListTitleUI.textContent = 'Keresési eredmények';
+        
+        if (results.length === 0) {
+            this.fileGridUI.innerHTML = `<div style="color: var(--text-muted);">Nincs a "${query}" kifejezésnek megfelelő tétel.</div>`;
+            return;
+        }
 
+        const grid = document.createElement('div');
+        grid.className = 'file-grid';
+
+        results.forEach(fileObj => {
+            const cleanName = fileObj.name.replace(/\.[^/.]+$/, "");
+            const metaInfo = `${fileObj.subject} > ${fileObj.category}`; 
+            
+            const card = this.createFileCard(fileObj, cleanName, metaInfo);
+            grid.appendChild(card);
+        });
+
+        this.fileGridUI.appendChild(grid);
+        this.subTabsUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
+    }
+
+    // Kártya HTML generátor
+    createFileCard(fileObj, displayName, metaText = null) {
+        const isExcel = fileObj.name.endsWith('.xlsx');
+        const card = document.createElement('div');
+        card.className = 'doc-card';
+        
+        if (this.currentFilePath === fileObj.path) {
+            card.classList.add('active');
+        }
+
+        const icon = isExcel ? '📊' : '📄';
+        const metaHtml = metaText ? `<div class="doc-card-meta">${metaText}</div>` : '';
+
+        card.innerHTML = `
+            <div class="doc-card-icon">${icon}</div>
+            <div class="doc-card-info">
+                <div class="doc-card-title" title="${displayName}">${displayName}</div>
+                ${metaHtml}
+            </div>
+        `;
+
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            this.currentFilePath = fileObj.path;
+            localStorage.setItem('lastOpenedFile', fileObj.path); 
+            
+            this.loadFileContent(fileObj.path, isExcel);
+            
+            // Mobilon automatikusan becsukjuk a menüt
+            if (window.innerWidth <= 768) {
+                this.sidebar.classList.remove('open');
+            }
+        });
+
+        return card;
+    }
+
+    // 8. Fájl letöltése és megjelenítése (Mammoth / SheetJS)
+    async loadFileContent(localPath, isExcel) {
+        this.contentView.innerHTML = '<div class="welcome-msg"><h3>Tétel betöltése...</h3></div>';
+        
         try {
-            const response = await fetch(fileUrl);
-            if (!response.ok) throw new Error('Fájl nem található.');
+            const response = await fetch(localPath);
+            if (!response.ok) throw new Error('A fájl nem található a gépen.');
             const arrayBuffer = await response.arrayBuffer();
 
             if (isExcel) {
@@ -199,8 +304,12 @@ class App {
         mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
             .then(result => {
                 this.contentView.innerHTML = `<div class="doc-content">${result.value}</div>`;
+                setTimeout(() => this.contentView.parentElement.scrollTop = 0, 10);
             })
-            .catch(err => this.contentView.innerHTML = "Hiba a Word konvertálásakor.");
+            .catch(err => {
+                console.error(err);
+                this.contentView.innerHTML = "Hiba a Word konvertálásakor.";
+            });
     }
 
     renderExcel(arrayBuffer) {
@@ -208,10 +317,10 @@ class App {
         const workbook = XLSX.read(data, { type: 'array' });
         const htmlTable = XLSX.utils.sheet_to_html(workbook.Sheets[workbook.SheetNames[0]]);
         this.contentView.innerHTML = `<div class="excel-table-container">${htmlTable.replace('<table', '<table class="excel-table"')}</div>`;
+        this.contentView.parentElement.scrollTop = 0;
     }
 }
 
-// Alkalmazás indítása
 document.addEventListener('DOMContentLoaded', () => {
     new App();
 });

@@ -12,34 +12,42 @@
 <body>
 
     <header class="topbar">
-        <div class="logo">🎓 Érettségi<span>Fókusz</span></div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="hamburgerMenu" class="btn-icon">☰</button>
+            <div class="logo">🎓 Érettségi<span>Fókusz</span></div>
+        </div>
         <div class="controls">
-            <span id="syncStatus" class="sync-status">🔄 Szinkronizálás a GitHubbal...</span>
+            <input type="text" id="searchInput" placeholder="🔍 Keresés tételekben..." class="search-input">
+            <span id="syncStatus" class="sync-status">Betöltés...</span>
             <button id="themeToggle" class="btn-icon">🌙</button>
         </div>
     </header>
 
     <div class="layout">
-        <nav class="sidebar">
-            <ul id="mainTabs" class="nav-menu">
-                </ul>
-        </nav>
+        <aside class="resizable-sidebar">
+            
+            <div class="sidebar-section">
+                <h3 class="section-title">Tantárgyak</h3>
+                <ul id="mainTabs" class="nav-menu"></ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="section-title">Kategóriák</h3>
+                <ul id="subTabs" class="pill-menu"></ul>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 id="fileListTitle" class="section-title">Tételek</h3>
+                <div id="fileGrid" class="file-grid"></div>
+            </div>
+
+        </aside>
 
         <main class="content-area">
-            <div class="top-nav">
-                <ul id="subTabs" class="pill-menu">
-                    </ul>
-            </div>
-
-            <div class="file-nav">
-                <ul id="fileList" class="file-menu">
-                    </ul>
-            </div>
-
             <div id="contentView" class="view-container">
                 <div class="welcome-msg">
                     <h2>Üdvözöllek!</h2>
-                    <p>Az adatok betöltése a GitHubról megtörtént. Válassz egy tételt a tanuláshoz!</p>
+                    <p>Válassz egy tételt a bal oldali menüből a tanuláshoz!</p>
                 </div>
             </div>
         </main>
