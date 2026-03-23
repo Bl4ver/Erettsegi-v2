@@ -17,6 +17,12 @@
             <div class="logo">🎓 Érettségi<span>Fókusz</span></div>
         </div>
         <div class="controls">
+            <div class="zoom-controls">
+                <button id="zoomOut" class="zoom-btn" title="Kicsinyítés">−</button>
+                <span id="zoomLevel" class="zoom-level">100%</span>
+                <button id="zoomIn" class="zoom-btn" title="Nagyítás">+</button>
+            </div>
+
             <input type="text" id="searchInput" placeholder="🔍 Keresés tételekben..." class="search-input">
             <span id="syncStatus" class="sync-status">Betöltés...</span>
             <button id="themeToggle" class="btn-icon">🌙</button>
@@ -25,22 +31,18 @@
 
     <div class="layout">
         <aside class="resizable-sidebar">
-            
             <div class="sidebar-section">
                 <h3 class="section-title">Tantárgyak</h3>
                 <ul id="mainTabs" class="nav-menu"></ul>
             </div>
-
             <div class="sidebar-section">
                 <h3 class="section-title">Kategóriák</h3>
                 <ul id="subTabs" class="pill-menu"></ul>
             </div>
-
             <div class="sidebar-section">
                 <h3 id="fileListTitle" class="section-title">Tételek</h3>
                 <div id="fileGrid" class="file-grid"></div>
             </div>
-
         </aside>
 
         <main class="content-area">

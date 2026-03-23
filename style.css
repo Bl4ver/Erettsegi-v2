@@ -46,28 +46,35 @@ body {
 h1, h2, h3 { font-family: var(--font-heading); }
 
 .topbar {
-    height: 70px; background-color: var(--sidebar-bg); display: flex;
-    justify-content: space-between; align-items: center; padding: 0 1.5rem;
+    height: auto; min-height: 70px; background-color: var(--sidebar-bg); display: flex;
+    justify-content: space-between; align-items: center; padding: 0.5rem 1.5rem;
     border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); z-index: 200;
+    flex-wrap: wrap; /* Engedjük, hogy mobilon több sorba törjön a fejléc! */
+    gap: 0.5rem;
 }
-.logo { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; }
+.logo { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700; white-space: nowrap; }
 .logo span { color: var(--accent); }
-.controls { display: flex; align-items: center; gap: 0.8rem; }
+.controls { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+
+.zoom-controls { display: flex; align-items: center; gap: 0.3rem; background-color: var(--bg-color); padding: 0.2rem; border-radius: 8px; border: 1px solid var(--border); }
+.zoom-btn { background: transparent; border: none; border-radius: 4px; width: 28px; height: 28px; cursor: pointer; color: var(--text-main); font-size: 1.2rem; display: flex; align-items: center; justify-content: center; font-weight: bold;}
+.zoom-btn:hover { background: var(--accent-light); color: var(--accent); }
+.zoom-level { font-size: 0.8rem; font-weight: 600; min-width: 45px; text-align: center; color: var(--text-main); }
 
 .search-input {
     padding: 0.5rem 1.2rem; border-radius: 20px; border: 1px solid var(--border);
     background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-body);
-    outline: none; width: 200px; transition: width 0.3s, border-color 0.3s;
+    outline: none; width: 200px; max-width: 100%; transition: width 0.3s, border-color 0.3s;
 }
 .search-input:focus { border-color: var(--accent); width: 250px; }
-.sync-status { font-size: 0.8rem; color: var(--text-muted); }
-.btn-icon { background: none; border: 1px solid var(--border); cursor: pointer; padding: 0.5rem; border-radius: 50%; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;}
+.sync-status { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+.btn-icon { background: none; border: 1px solid var(--border); cursor: pointer; padding: 0.5rem; border-radius: 50%; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex-shrink: 0;}
 .btn-icon:hover { background-color: var(--bg-color); }
 
 /* ==========================================
    3. ÁTMÉRETEZHETŐ OLDALSÁV ÉS MENÜK
    ========================================== */
-.layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+.layout { display: flex; flex: 1; overflow: hidden; position: relative; width: 100%; }
 
 .resizable-sidebar {
     width: 320px; min-width: 260px; max-width: 50vw;
@@ -86,7 +93,6 @@ h1, h2, h3 { font-family: var(--font-heading); }
     color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 0.8rem; padding-left: 0.5rem;
 }
 
-/* JAVÍTÁS: Szövegtördelés minden menüben */
 .nav-menu { list-style: none; }
 .nav-menu li {
     padding: 0.6rem 0.8rem; margin-bottom: 0.3rem; border-radius: 6px; cursor: pointer;
@@ -105,15 +111,13 @@ h1, h2, h3 { font-family: var(--font-heading); }
 .pill-menu li:hover { border-color: var(--accent); color: var(--accent); }
 .pill-menu li.active { background-color: var(--accent); color: white; border-color: var(--accent); box-shadow: var(--shadow-sm); }
 
-/* Fájl Kártyák - JAVÍTÁS: Tördelés engedélyezése */
 .file-grid { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
 .search-title { margin-bottom: 1rem; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; padding-left: 0.5rem; }
 
 .doc-card {
     background-color: var(--content-bg); border: 1px solid var(--border);
     border-radius: 8px; padding: 0.8rem; cursor: pointer; display: flex;
-    align-items: flex-start; /* Fontos: Ha több soros, az ikon felül marad */
-    gap: 0.8rem; box-shadow: var(--shadow-sm);
+    align-items: flex-start; gap: 0.8rem; box-shadow: var(--shadow-sm);
 }
 .doc-card:hover { border-color: var(--accent); transform: translateX(3px); }
 .doc-card.active { background-color: var(--accent-light); border-color: var(--accent); box-shadow: inset 3px 0 0 0 var(--accent); }
@@ -121,7 +125,6 @@ h1, h2, h3 { font-family: var(--font-heading); }
 .doc-card-icon { font-size: 1.2rem; background-color: var(--bg-color); padding: 0.4rem; border-radius: 6px; flex-shrink: 0; }
 .doc-card-info { display: flex; flex-direction: column; flex: 1; }
 
-/* JAVÍTÁS: Itt volt az ellipsis, ami levágta a szöveget! Most már normálisan törik. */
 .doc-card-title { 
     font-weight: 600; font-size: 0.85rem; color: var(--text-main); 
     white-space: normal; word-wrap: break-word; line-height: 1.3; 
@@ -129,43 +132,103 @@ h1, h2, h3 { font-family: var(--font-heading); }
 .doc-card-meta { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; }
 
 /* ==========================================
-   4. TARTALOM MEGJELENÍTŐ
+   4. TARTALOM MEGJELENÍTŐ (ZOOM & RESPONSIVE FIX)
    ========================================== */
-.content-area { flex: 1; background-color: var(--bg-color); display: flex; justify-content: center; overflow-y: auto; }
-.view-container {
-    margin: 2rem 1rem; padding: 4rem 5rem; background-color: var(--content-bg);
-    border-radius: 12px; box-shadow: var(--shadow-lg); max-width: 900px; width: 100%; height: fit-content; min-height: 80%;
+.content-area { 
+    flex: 1; 
+    min-width: 0; /* EZ A KULCS! Megakadályozza, hogy a belső tartalom szétfeszítse a layoutot */
+    background-color: var(--bg-color); 
+    display: flex; 
+    justify-content: center; 
+    overflow-y: auto; 
+    overflow-x: hidden;
 }
+
+.view-container {
+    --zoom-factor: 1;
+    font-size: calc(1rem * var(--zoom-factor));
+    margin: 2rem 1rem; padding: 4rem 5rem; background-color: var(--content-bg);
+    border-radius: 12px; box-shadow: var(--shadow-lg); 
+    max-width: 900px; width: 100%; height: fit-content; min-height: 80%;
+    overflow-wrap: anywhere; /* Szövegek kényszerített törése extrém esetben */
+}
+
 .welcome-msg { text-align: center; color: var(--text-muted); margin-top: 4rem; }
 
 /* DOKUMENTUM FORMAZASA */
-.doc-content { line-height: 1.8; font-size: 1.05rem; font-family: var(--font-docx); color: var(--text-main); word-wrap: break-word; }
-.doc-content h1, .doc-content h2, .doc-content h3 { color: var(--accent); margin-top: 2rem; margin-bottom: 0.8rem; font-family: var(--font-heading); }
-.doc-content p { margin-bottom: 1.1rem; }
-.doc-content p + p { text-indent: 2rem; }
-.doc-content blockquote { margin-left: 2rem; padding-left: 1rem; border-left: 3px solid var(--border); color: var(--text-muted); }
-.doc-content ul, .doc-content ol { margin-left: 3rem; margin-bottom: 1.1rem; }
-.doc-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 1.5rem 0; box-shadow: var(--shadow-md); }
-.doc-content table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.95rem; }
-.doc-content th, .doc-content td { padding: 0.8rem; border: 1px solid var(--border); text-align: left; }
+.doc-content { line-height: 1.8; font-size: 1.05em; font-family: var(--font-docx); color: var(--text-main); word-wrap: break-word; }
+.doc-content h1, .doc-content h2, .doc-content h3 { color: var(--accent); margin-top: 2em; margin-bottom: 0.8em; font-family: var(--font-heading); }
+.doc-content h1 { font-size: 2.2em; }
+.doc-content h2 { font-size: 1.8em; }
+.doc-content h3 { font-size: 1.5em; }
+.doc-content p { margin-bottom: 1.1em; }
+.doc-content p + p { text-indent: 2em; }
+.doc-content blockquote { margin-left: 2em; padding-left: 1em; border-left: 3px solid var(--border); color: var(--text-muted); }
+.doc-content ul, .doc-content ol { margin-left: 3em; margin-bottom: 1.1em; }
+.doc-content li { margin-bottom: 0.4em; }
+
+/* KÉPEK ÉS TÁBLÁZATOK MOBILOS FIXÁLÁSA */
+.doc-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 1.5em 0; box-shadow: var(--shadow-md); object-fit: contain; }
+.doc-content table { 
+    display: block; /* Hogy külön tudjon vízszintesen görögni, ha nem fér ki */
+    width: 100%; max-width: 100%; overflow-x: auto; 
+    border-collapse: collapse; margin: 1.5em 0; font-size: 0.95em; 
+}
+.doc-content th, .doc-content td { padding: 0.8em; border: 1px solid var(--border); text-align: left; min-width: 100px; }
 .doc-content th { background-color: var(--accent-light); color: var(--accent); }
 
+.excel-table-container { max-width: 100%; overflow-x: auto; }
+.excel-table { width: 100%; border-collapse: collapse; margin-top: 1em; min-width: 500px; }
+.excel-table th, .excel-table td { padding: 0.8em; border-bottom: 1px solid var(--border); text-align: left; }
+.excel-table th { background-color: var(--accent-light); color: var(--accent); position: sticky; top: 0; }
+
 /* ==========================================
-   5. MOBIL NÉZET
+   5. MOBIL NÉZET (IGAZI RESPONSIVE)
    ========================================== */
 @media (max-width: 768px) {
-    .topbar { padding: 0 1rem; height: 60px; }
-    .search-input { width: 130px; }
-    .search-input:focus { width: 180px; }
-    .sync-status { display: none; }
-    .view-container { margin: 0; border-radius: 0; padding: 2rem 1.5rem; box-shadow: none; min-height: 100%; }
+    .topbar { padding: 0.5rem 1rem; }
     
+    /* A kereső kitölti a maradék helyet */
+    .search-input { flex: 1; width: auto; min-width: 140px; }
+    .search-input:focus { width: auto; }
+    
+    /* Nem létfontosságú elemek elrejtése kis képernyőn */
+    .sync-status, .zoom-controls { display: none; }
+    
+    /* Kisebb logó */
+    .logo span { display: none; } /* Csak az "Érettségi" szó marad */
+
+    .view-container { margin: 0; border-radius: 0; padding: 1.5rem 1rem; box-shadow: none; min-height: 100%; max-width: 100vw; }
+    
+    /* A menü most fix pozíciót kapott (nem lökdösi a többi tartalmat) */
     .resizable-sidebar { 
-        position: absolute; left: 0; top: 0; height: 100%; 
-        width: 280px; max-width: 90vw; resize: none; 
+        position: fixed; left: 0; top: 0; height: 100vh; 
+        width: 85vw; max-width: 320px; resize: none; 
         box-shadow: var(--shadow-lg);
         transform: translateX(-100%); 
-        transition: transform 0.3s ease;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
     }
     .resizable-sidebar.open { transform: translateX(0); }
 }
+
+/* ==========================================
+   6. DOKUMENTUM NAVIGÁCIÓ (Előző / Következő)
+   ========================================== */
+.doc-navigation {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border);
+}
+.btn-nav {
+    background-color: var(--sidebar-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.8rem 1.2rem; cursor: pointer; color: var(--text-muted);
+    font-family: var(--font-body); font-size: 0.85rem; text-align: left; transition: all 0.2s;
+    box-shadow: var(--shadow-sm); flex: 1; margin: 0 0.5rem;
+}
+.btn-nav span { 
+    display: block; font-weight: 600; color: var(--text-main); font-size: 0.95rem; 
+    margin-top: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+}
+.btn-nav.btn-next { text-align: right; }
+.btn-nav:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn-nav:hover span { color: var(--accent); }

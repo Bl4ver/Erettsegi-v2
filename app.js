@@ -13,10 +13,14 @@ class App {
         this.contentView = document.getElementById('contentView');
         this.syncStatus = document.getElementById('syncStatus');
         this.searchInput = document.getElementById('searchInput');
-        
-        // ÚJ UI Elem: A Tételek szekció dinamikus címe
         this.fileListTitleUI = document.getElementById('fileListTitle');
         
+        // Zoom Elemek
+        this.zoomLevel = 100;
+        this.zoomLevelUI = document.getElementById('zoomLevel');
+        this.zoomInBtn = document.getElementById('zoomIn');
+        this.zoomOutBtn = document.getElementById('zoomOut');
+
         // Hamburger menü és oldalsáv
         this.hamburgerBtn = document.getElementById('hamburgerMenu');
         this.sidebar = document.querySelector('.resizable-sidebar');
@@ -28,12 +32,13 @@ class App {
 
         // Inicializálások
         this.initTheme();
+        this.initZoom();
         this.initSearch();
         this.initHamburger();
         this.loadLocalData();
     }
 
-    // 1. Téma kezelés (Sötét/Világos)
+    // 1. Téma kezelés
     initTheme() {
         const toggleBtn = document.getElementById('themeToggle');
         let currentTheme = localStorage.getItem('theme') || 'light';
@@ -46,7 +51,34 @@ class App {
         });
     }
 
-    // 2. Hamburger menü kattintás esemény
+    // 2. Zoom kezelés
+    initZoom() {
+        const savedZoom = localStorage.getItem('docZoomLevel');
+        if (savedZoom) this.zoomLevel = parseInt(savedZoom, 10);
+        this.updateZoomUI();
+
+        this.zoomInBtn.addEventListener('click', () => {
+            if (this.zoomLevel < 250) {
+                this.zoomLevel += 10;
+                this.updateZoomUI();
+            }
+        });
+
+        this.zoomOutBtn.addEventListener('click', () => {
+            if (this.zoomLevel > 50) {
+                this.zoomLevel -= 10;
+                this.updateZoomUI();
+            }
+        });
+    }
+
+    updateZoomUI() {
+        this.zoomLevelUI.textContent = `${this.zoomLevel}%`;
+        this.contentView.style.setProperty('--zoom-factor', this.zoomLevel / 100);
+        localStorage.setItem('docZoomLevel', this.zoomLevel);
+    }
+
+    // 3. Hamburger menü
     initHamburger() {
         this.hamburgerBtn.addEventListener('click', () => {
             if (window.innerWidth <= 768) {
@@ -57,13 +89,12 @@ class App {
         });
     }
 
-    // 3. Kereső logika (Élő szűrés)
+    // 4. Kereső logika
     initSearch() {
         this.searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase().trim();
             
             if (query.length < 2) {
-                // Ha törli a keresést, visszatöltjük a normál nézetet
                 if (this.activeCategory) {
                     this.renderFileList();
                 } else {
@@ -73,7 +104,6 @@ class App {
                 return;
             }
 
-            // Globális keresés a teljes fileSystem-ben
             const results = [];
             for (const subj in this.fileSystem) {
                 for (const cat in this.fileSystem[subj]) {
@@ -84,12 +114,11 @@ class App {
                     });
                 }
             }
-
             this.renderSearchResults(results, query);
         });
     }
 
-    // 4. Adatok betöltése
+    // 5. Adatok betöltése
     async loadLocalData() {
         try {
             const response = await fetch('data.json');
@@ -105,18 +134,13 @@ class App {
             console.error(error);
             this.syncStatus.textContent = "❌ Hiányzó adatok";
             this.syncStatus.style.color = "red";
-            this.contentView.innerHTML = `
-                <div class="welcome-msg" style="color: red;">
-                    <h3>Hiba: Nincs data.json fájl!</h3>
-                    <p>Futtasd le a <b>generator.py</b> fájlt a mappádban!</p>
-                </div>`;
+            this.contentView.innerHTML = `<div class="welcome-msg" style="color: red;"><h3>Hiba: Nincs data.json fájl!</h3></div>`;
         }
     }
 
-    // MEMÓRIA
+    // 6. Memória visszatöltés
     restoreLastOpened() {
         const lastFile = localStorage.getItem('lastOpenedFile');
-        
         if (lastFile) {
             for (const subj in this.fileSystem) {
                 for (const cat in this.fileSystem[subj]) {
@@ -132,11 +156,10 @@ class App {
                 }
             }
         }
-        
         this.renderMainTabs();
     }
 
-    // 5. UI: Főtárgyak
+    // 7. UI: Főtárgyak
     renderMainTabs() {
         this.mainTabsUI.innerHTML = '';
         const subjects = Object.keys(this.fileSystem);
@@ -147,30 +170,26 @@ class App {
         subjects.forEach((subject) => {
             const li = document.createElement('li');
             li.innerHTML = `📁 ${subject}`;
-            
             if (subject === this.activeSubject) li.classList.add('active');
 
             li.addEventListener('click', () => {
                 this.mainTabsUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
                 li.classList.add('active');
                 this.activeSubject = subject;
-                
                 this.activeCategory = null; 
                 this.renderSubTabs();
             });
-
             this.mainTabsUI.appendChild(li);
         });
-
         this.renderSubTabs();
     }
 
-    // 6. UI: Kategóriák
+    // 8. UI: Kategóriák
     renderSubTabs() {
         this.subTabsUI.innerHTML = '';
         this.fileGridUI.innerHTML = ''; 
         this.searchInput.value = ''; 
-        this.fileListTitleUI.textContent = 'Tételek'; // Alaphelyzetbe állítjuk a címet
+        this.fileListTitleUI.textContent = 'Tételek'; 
         
         const categories = Object.keys(this.fileSystem[this.activeSubject] || {});
         if (categories.length === 0) return;
@@ -178,36 +197,28 @@ class App {
         categories.forEach((category) => {
             const li = document.createElement('li');
             li.textContent = category;
-            
             if (category === this.activeCategory) li.classList.add('active');
 
             li.addEventListener('click', () => {
                 this.subTabsUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
                 li.classList.add('active');
                 this.activeCategory = category;
-                
                 this.renderFileList();
             });
-
             this.subTabsUI.appendChild(li);
         });
 
-        if (this.activeCategory) {
-            this.renderFileList();
-        }
+        if (this.activeCategory) this.renderFileList();
     }
 
-    // 7. UI: Fájl Kártyák listázása
+    // 9. UI: Fájlok listázása
     renderFileList() {
         this.fileGridUI.innerHTML = '';
-        
-        // JAVÍTÁS: A felirat frissítése a kategória nevére
         if (this.activeCategory) {
             this.fileListTitleUI.textContent = this.activeCategory;
         }
 
         const files = this.fileSystem[this.activeSubject][this.activeCategory] || [];
-
         files.forEach(fileObj => {
             const cleanName = fileObj.name.replace(/\.[^/.]+$/, "");
             const card = this.createFileCard(fileObj, cleanName);
@@ -215,11 +226,9 @@ class App {
         });
     }
 
-    // Keresési eredmények renderelése
+    // Keresési eredmények
     renderSearchResults(results, query) {
         this.fileGridUI.innerHTML = '';
-        
-        // Cím módosítása keresés közben
         this.fileListTitleUI.textContent = 'Keresési eredmények';
         
         if (results.length === 0) {
@@ -233,7 +242,6 @@ class App {
         results.forEach(fileObj => {
             const cleanName = fileObj.name.replace(/\.[^/.]+$/, "");
             const metaInfo = `${fileObj.subject} > ${fileObj.category}`; 
-            
             const card = this.createFileCard(fileObj, cleanName, metaInfo);
             grid.appendChild(card);
         });
@@ -242,15 +250,13 @@ class App {
         this.subTabsUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
     }
 
-    // Kártya HTML generátor
+    // Kártya készítő
     createFileCard(fileObj, displayName, metaText = null) {
         const isExcel = fileObj.name.endsWith('.xlsx');
         const card = document.createElement('div');
         card.className = 'doc-card';
         
-        if (this.currentFilePath === fileObj.path) {
-            card.classList.add('active');
-        }
+        if (this.currentFilePath === fileObj.path) card.classList.add('active');
 
         const icon = isExcel ? '📊' : '📄';
         const metaHtml = metaText ? `<div class="doc-card-meta">${metaText}</div>` : '';
@@ -264,6 +270,21 @@ class App {
         `;
 
         card.addEventListener('click', () => {
+            // JAVÍTÁS: Ha a keresőből jöttünk, frissítjük az állapotot, hogy ne fagyjon be a menü!
+            if (fileObj.subject && fileObj.category) {
+                this.activeSubject = fileObj.subject;
+                this.activeCategory = fileObj.category;
+                this.searchInput.value = ''; // Kereső ürítése
+                this.currentFilePath = fileObj.path;
+                localStorage.setItem('lastOpenedFile', fileObj.path); 
+                
+                this.renderMainTabs(); // Mindent újra-renderel, így a menü helyreáll
+                this.loadFileContent(fileObj.path, isExcel);
+                if (window.innerWidth <= 768) this.sidebar.classList.remove('open');
+                return;
+            }
+
+            // Normál kattintás
             document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('active'));
             card.classList.add('active');
             
@@ -272,7 +293,6 @@ class App {
             
             this.loadFileContent(fileObj.path, isExcel);
             
-            // Mobilon automatikusan becsukjuk a menüt
             if (window.innerWidth <= 768) {
                 this.sidebar.classList.remove('open');
             }
@@ -281,10 +301,64 @@ class App {
         return card;
     }
 
-    // 8. Fájl letöltése és megjelenítése (Mammoth / SheetJS)
+    // ÚJ: Lapozó (Prev/Next) funkció
+    appendNavigation() {
+        if (!this.activeSubject || !this.activeCategory || !this.currentFilePath) return;
+        
+        const files = this.fileSystem[this.activeSubject][this.activeCategory] || [];
+        const currentIndex = files.findIndex(f => f.path === this.currentFilePath);
+        
+        if (currentIndex === -1) return;
+
+        const navDiv = document.createElement('div');
+        navDiv.className = 'doc-navigation';
+
+        const prevFile = currentIndex > 0 ? files[currentIndex - 1] : null;
+        const nextFile = currentIndex < files.length - 1 ? files[currentIndex + 1] : null;
+
+        if (prevFile) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-nav btn-prev';
+            btn.innerHTML = `⬅ Előző tétel<br><span>${prevFile.name.replace(/\.[^/.]+$/, "")}</span>`;
+            btn.addEventListener('click', () => this.switchFile(prevFile));
+            navDiv.appendChild(btn);
+        } else {
+            const empty = document.createElement('div');
+            empty.style.flex = "1"; empty.style.margin = "0 0.5rem";
+            navDiv.appendChild(empty);
+        }
+
+        if (nextFile) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-nav btn-next';
+            btn.innerHTML = `Következő tétel ➡<br><span>${nextFile.name.replace(/\.[^/.]+$/, "")}</span>`;
+            btn.addEventListener('click', () => this.switchFile(nextFile));
+            navDiv.appendChild(btn);
+        } else {
+            const empty = document.createElement('div');
+            empty.style.flex = "1"; empty.style.margin = "0 0.5rem";
+            navDiv.appendChild(empty);
+        }
+
+        this.contentView.appendChild(navDiv);
+    }
+
+    // Segédfüggvény a gombos lapozáshoz
+    switchFile(fileObj) {
+        this.currentFilePath = fileObj.path;
+        localStorage.setItem('lastOpenedFile', fileObj.path);
+        
+        this.renderFileList(); // Frissíti a kék keretet a bal oldali menüben
+        
+        const isExcel = fileObj.name.endsWith('.xlsx');
+        this.loadFileContent(fileObj.path, isExcel);
+        
+        if (window.innerWidth <= 768) this.sidebar.classList.remove('open');
+    }
+
+    // 10. Fájl letöltése és megjelenítése
     async loadFileContent(localPath, isExcel) {
         this.contentView.innerHTML = '<div class="welcome-msg"><h3>Tétel betöltése...</h3></div>';
-        
         try {
             const response = await fetch(localPath);
             if (!response.ok) throw new Error('A fájl nem található a gépen.');
@@ -304,6 +378,7 @@ class App {
         mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
             .then(result => {
                 this.contentView.innerHTML = `<div class="doc-content">${result.value}</div>`;
+                this.appendNavigation(); // <--- Gombok hozzáadása
                 setTimeout(() => this.contentView.parentElement.scrollTop = 0, 10);
             })
             .catch(err => {
@@ -317,6 +392,7 @@ class App {
         const workbook = XLSX.read(data, { type: 'array' });
         const htmlTable = XLSX.utils.sheet_to_html(workbook.Sheets[workbook.SheetNames[0]]);
         this.contentView.innerHTML = `<div class="excel-table-container">${htmlTable.replace('<table', '<table class="excel-table"')}</div>`;
+        this.appendNavigation(); // <--- Gombok hozzáadása
         this.contentView.parentElement.scrollTop = 0;
     }
 }
