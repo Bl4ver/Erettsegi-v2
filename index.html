@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="hu" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Érettségi Fókusz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.1/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="logo">🎓 Érettségi<span>Fókusz</span></div>
+        <div class="controls">
+            <span id="syncStatus" class="sync-status">🔄 Szinkronizálás a GitHubbal...</span>
+            <button id="themeToggle" class="btn-icon">🌙</button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <nav class="sidebar">
+            <ul id="mainTabs" class="nav-menu">
+                </ul>
+        </nav>
+
+        <main class="content-area">
+            <div class="top-nav">
+                <ul id="subTabs" class="pill-menu">
+                    </ul>
+            </div>
+
+            <div class="file-nav">
+                <ul id="fileList" class="file-menu">
+                    </ul>
+            </div>
+
+            <div id="contentView" class="view-container">
+                <div class="welcome-msg">
+                    <h2>Üdvözöllek!</h2>
+                    <p>Az adatok betöltése a GitHubról megtörtént. Válassz egy tételt a tanuláshoz!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
