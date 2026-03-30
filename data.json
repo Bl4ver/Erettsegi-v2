@@ -1,5 +1,27 @@
 {
     "Irodalom": {
+        "Általános": [
+            {
+                "name": "A római irodalom.docx",
+                "path": "Erettsegi_Adatok/Irodalom/A római irodalom.docx"
+            },
+            {
+                "name": "A thébai mondakör (Oidipusz király, Antigoné).docx",
+                "path": "Erettsegi_Adatok/Irodalom/A thébai mondakör (Oidipusz király, Antigoné).docx"
+            },
+            {
+                "name": "A trójai mondakör (Trójai háb., Iliász, Odüsszeia).docx",
+                "path": "Erettsegi_Adatok/Irodalom/A trójai mondakör (Trójai háb., Iliász, Odüsszeia).docx"
+            },
+            {
+                "name": "Görög mitológia.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Görög mitológia.docx"
+            },
+            {
+                "name": "Összes mű.xlsx",
+                "path": "Erettsegi_Adatok/Irodalom/Összes mű.xlsx"
+            }
+        ],
         "Korszakok": [
             {
                 "name": "Felvilágosodás.docx",
