@@ -2,24 +2,78 @@
     "Irodalom": {
         "Általános": [
             {
-                "name": "A római irodalom.docx",
-                "path": "Erettsegi_Adatok/Irodalom/A római irodalom.docx"
-            },
-            {
-                "name": "A thébai mondakör (Oidipusz király, Antigoné).docx",
-                "path": "Erettsegi_Adatok/Irodalom/A thébai mondakör (Oidipusz király, Antigoné).docx"
-            },
-            {
-                "name": "A trójai mondakör (Trójai háb., Iliász, Odüsszeia).docx",
-                "path": "Erettsegi_Adatok/Irodalom/A trójai mondakör (Trójai háb., Iliász, Odüsszeia).docx"
-            },
-            {
-                "name": "Görög mitológia.docx",
-                "path": "Erettsegi_Adatok/Irodalom/Görög mitológia.docx"
+                "name": "Fogalmak.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Fogalmak.docx"
             },
             {
                 "name": "Összes mű.xlsx",
                 "path": "Erettsegi_Adatok/Irodalom/Összes mű.xlsx"
+            }
+        ],
+        "Adattár": [
+            {
+                "name": "1. Görög mitológia.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/1. Görög mitológia.docx"
+            },
+            {
+                "name": "10. Biblia.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/10. Biblia.docx"
+            },
+            {
+                "name": "11. Reneszánsz és humanizmus.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/11. Reneszánsz és humanizmus.docx"
+            },
+            {
+                "name": "12. Balassi Bálint.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/12. Balassi Bálint.docx"
+            },
+            {
+                "name": "13. William Shakespeare - Rómeó és Júlia.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/13. William Shakespeare - Rómeó és Júlia.docx"
+            },
+            {
+                "name": "14. Reformáció és 16. század.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/14. Reformáció és 16. század.docx"
+            },
+            {
+                "name": "15. Barokk, Zrínyi, Mikes Kelemen.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/15. Barokk, Zrínyi, Mikes Kelemen.docx"
+            },
+            {
+                "name": "16. Felvilágosodás és klasszicizmus.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/16. Felvilágosodás és klasszicizmus.docx"
+            },
+            {
+                "name": "2. A trójai mondakör (Trójai háb., Iliász, Odüsszeia).docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/2. A trójai mondakör (Trójai háb., Iliász, Odüsszeia).docx"
+            },
+            {
+                "name": "3. A thébai mondakör (Oidipusz király, Antigoné).docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/3. A thébai mondakör (Oidipusz király, Antigoné).docx"
+            },
+            {
+                "name": "4. A római irodalom.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/4. A római irodalom.docx"
+            },
+            {
+                "name": "5. A középkori irodalom.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/5. A középkori irodalom.docx"
+            },
+            {
+                "name": "6. A magyar irodalom kezdetei.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/6. A magyar irodalom kezdetei.docx"
+            },
+            {
+                "name": "7. Lovagi irodalom.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/7. Lovagi irodalom.docx"
+            },
+            {
+                "name": "8. Vágánsok és Villon.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/8. Vágánsok és Villon.docx"
+            },
+            {
+                "name": "9. Dante Isteni színjáték.docx",
+                "path": "Erettsegi_Adatok/Irodalom/Adattár/9. Dante Isteni színjáték.docx"
             }
         ],
         "Korszakok": [
