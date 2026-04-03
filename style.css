@@ -410,3 +410,13 @@ h1, h2, h3 { font-family: var(--font-heading); }
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.quiz-explanation-item {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background: var(--bg-color);
+    border-radius: 6px;
+    border-left: 4px solid var(--border);
+}
+.quiz-explanation-item.correct-border { border-left-color: #10B981; background: rgba(16,185,129,0.05); }
+.quiz-explanation-item.wrong-border { border-left-color: #EF4444; }

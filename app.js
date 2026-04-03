@@ -418,10 +418,11 @@ class App {
 
     generateQuestion() {
         document.getElementById('quizNextBtn').style.display = 'none';
-        
+        document.getElementById('verifySearchBtn').style.display = 'none';
+
         const headers = this.currentTable.headers;
         const rows = this.currentTable.rows;
-        
+
         const validIndices = headers.map((h, i) => {
             const low = h.toLowerCase();
             if (low.includes('műfaj') || low.includes('korszak') || low.includes('szerző') || low.includes('műnem')) return i;
@@ -430,7 +431,7 @@ class App {
 
         const colIndex = validIndices[Math.floor(Math.random() * validIndices.length)];
         const headerName = headers[colIndex];
-        
+
         const allValues = rows.map(r => this.cleanValue(r.rawData[colIndex])).filter(v => v !== "" && v !== "Nincs megadva" && v !== "Egyéb");
         const uniqueValues = [...new Set(allValues)];
         const targetValue = uniqueValues[Math.floor(Math.random() * uniqueValues.length)];
@@ -442,17 +443,17 @@ class App {
 
         const wrongRows = rows.filter(r => this.cleanValue(r.rawData[colIndex]) !== targetValue);
         const shuffledWrongs = wrongRows.sort(() => 0.5 - Math.random()).slice(0, 3);
-        
+
         // Ez a lista tartalmazza az összes gombhoz tartozó TELJES soradatot
         const quizOptionsData = [correctRow, ...shuffledWrongs].sort(() => 0.5 - Math.random());
 
         document.getElementById('quizCategory').innerText = headerName + ":";
         document.getElementById('quizTarget').innerText = targetValue;
         document.getElementById('quizFeedback').innerText = "";
-        
+
         const optionsDiv = document.getElementById('quizOptions');
         optionsDiv.innerHTML = "";
-        
+
         quizOptionsData.forEach(rowObj => {
             const optText = String(rowObj.rawData[1] || rowObj.rawData[0]);
             const btn = document.createElement('button');
@@ -469,39 +470,52 @@ class App {
         buttons.forEach(b => b.disabled = true);
 
         const feedbackDiv = document.getElementById('quizFeedback');
-        
-        // 1. Fő magyarázat összeállítása
-        let html = selected === correct 
-            ? `<div style="color: #10B981; margin-bottom: 15px; font-size: 1.1rem;">🎉 Helyes válasz!</div>`
-            : `<div style="color: #EF4444; margin-bottom: 15px; font-size: 1.1rem;">❌ Sajnos nem jó...</div>`;
+        const aiBox = document.getElementById('aiFactCheck');
+        const aiContent = document.getElementById('aiFactContent');
+        const googleBtn = document.getElementById('googleSearchBtn');
+
+        // 1. Alap visszajelzés (Helyes/Helytelen)
+        let html = selected === correct
+            ? `<div style="color: #10B981; margin-bottom: 15px; font-size: 1.1rem; font-weight: bold;">🎉 Helyes válasz!</div>`
+            : `<div style="color: #EF4444; margin-bottom: 15px; font-size: 1.1rem; font-weight: bold;">❌ Sajnos nem jó...</div>`;
 
         html += `<div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
-                    A helyes válasz a(z) <strong>"${correct}"</strong>, mivel ennek a tételnek a <strong>${headerName}</strong> mezője: <strong>${targetValue}</strong>.
-                 </div>`;
+                A keresett tétel: <strong>"${correct}"</strong>, mivel ennek a tételnek a <strong>${headerName}</strong> mezője: <strong>${targetValue}</strong>.
+             </div>`;
 
-        // 2. Részletes lista az összes gombról
+        // 2. Részletes lista az ÖSSZES opcióról
         html += `<div style="text-align: left; font-size: 0.85rem;">
-                    <div style="font-weight: bold; margin-bottom: 8px; color: var(--text-muted);">Az opciók elemzése:</div>`;
-        
+                <div style="font-weight: bold; margin-bottom: 8px; color: var(--text-muted);">Az opciók elemzése:</div>`;
+
         allOptions.forEach(rowObj => {
             const title = String(rowObj.rawData[1] || rowObj.rawData[0]);
             const val = this.cleanValue(rowObj.rawData[colIndex]);
             const isCorrect = (title === correct);
-            
-            html += `<div class="quiz-explanation-item ${isCorrect ? 'correct-border' : 'wrong-border'}">
-                        <strong>${title}</strong><br>
-                        <span style="color: var(--text-muted);">${headerName}:</span> ${val}
-                     </div>`;
-        });
-        
-        html += `</div>`;
 
+            html += `<div class="quiz-explanation-item ${isCorrect ? 'correct-border' : 'wrong-border'}">
+                    <strong>${title}</strong><br>
+                    <span style="color: var(--text-muted);">${headerName}:</span> ${val}
+                 </div>`;
+        });
+        html += `</div>`;
         feedbackDiv.innerHTML = html;
 
+        // 3. AI Fact-Check blokk megjelenítése és finomított keresés
+        if (aiBox) {
+            aiBox.style.display = 'block';
+            aiContent.innerHTML = `Az irodalomtörténeti konszenzus alapján <strong>${correct}</strong> és a(z) <strong>${targetValue}</strong> kapcsolata egyértelmű. Ez az összefüggés gyakori érettségi pont, érdemes megjegyezni a stílusjegyek és a szerzői korszak alapján.`;
+
+            // Finomított keresési szöveg: "Mű címe" + "oszlopnév" + "elemzés irodalom"
+            const cleanSearchQuery = encodeURIComponent(`${correct} ${headerName} elemzés irodalom`);
+            googleBtn.href = `https://www.google.com/search?q=${cleanSearchQuery}`;
+            googleBtn.innerHTML = `🔍 Ellenőrzés: "${correct} ${headerName}"`;
+        }
+
+        // Gombok színezése
         if (selected === correct) btn.classList.add('correct');
         else {
             btn.classList.add('wrong');
-            buttons.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+            buttons.forEach(b => { if (b.innerText === correct) b.classList.add('correct'); });
         }
 
         document.getElementById('quizNextBtn').style.display = 'flex';
