@@ -1,18 +1,14 @@
 <!DOCTYPE html>
 <html lang="hu" data-theme="light">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Érettségi Fókusz</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.5.1/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-
 <body>
 
     <header class="topbar">
@@ -27,7 +23,7 @@
                 <button id="zoomIn" class="zoom-btn" title="Nagyítás">+</button>
             </div>
 
-            <input type="text" id="searchInput" placeholder="🔍 Keresés tételekben..." class="search-input">
+            <input type="text" id="searchInput" placeholder="🔍 Keresés fájlok között..." class="search-input">
             <span id="syncStatus" class="sync-status">Betöltés...</span>
             <button id="themeToggle" class="btn-icon">🌙</button>
         </div>
@@ -61,21 +57,30 @@
 
     <div id="quizModal" class="quiz-overlay" style="display: none;">
         <div class="quiz-card">
-            <div class="quiz-header">
-                <span id="quizCategory">Kategória:</span>
-                <span id="quizTarget">Cél</span>
-                <button onclick="window.appInstance.closePractice()" class="quiz-close">×</button>
+            <div class="quiz-header" style="display: block;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span id="quizCategory" style="color: var(--text-muted);">Kategória:</span>
+                        <span id="quizTarget" style="color: var(--accent); text-transform: uppercase; font-weight: bold;">Cél</span>
+                    </div>
+                    <button onclick="window.appInstance.closePractice()" class="quiz-close">×</button>
+                </div>
+                
+                <div style="margin-top: 15px; font-size: 0.9rem; font-weight: 500; display: flex; gap: 15px; align-items: center; background: var(--bg-color); padding: 10px; border-radius: 8px; border: 1px solid var(--border);">
+                    <span>Gyakorlás forrása:</span>
+                    <label style="cursor: pointer;"><input type="radio" name="quizSource" value="all" checked onchange="window.appInstance.generateQuestion()"> Minden tétel</label>
+                    <label style="cursor: pointer;"><input type="radio" name="quizSource" value="fav" onchange="window.appInstance.generateQuestion()"> Csak kedvencek (⭐)</label>
+                </div>
             </div>
+
             <div class="quiz-question">Melyik tétel tartozik a fenti kategóriába?</div>
+            
             <div id="quizOptions" class="quiz-options"></div>
             <div id="quizFeedback" class="quiz-feedback"></div>
+            
+            <a id="verifySearchBtn" target="_blank" class="btn-verify" style="display: none;">🌐 Ellenőrzés a neten</a>
 
-            <a id="verifySearchBtn" target="_blank" class="btn-verify" style="display: none;">
-                🌐 Ellenőrzés a neten
-            </a>
-
-            <button id="quizNextBtn" onclick="window.appInstance.generateQuestion()" class="btn-practice"
-                style="display: none; margin-top: 1.5rem; width: 100%; justify-content: center;">
+            <button id="quizNextBtn" onclick="window.appInstance.generateQuestion()" class="btn-practice" style="display: none; margin-top: 1.5rem; width: 100%; justify-content: center;">
                 Következő kérdés ➔
             </button>
         </div>
@@ -83,5 +88,4 @@
 
     <script src="app.js"></script>
 </body>
-
 </html>

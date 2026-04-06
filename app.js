@@ -4,10 +4,9 @@
 
 class App {
     constructor() {
-        this.fileSystem = {};
-        this.userStatus = JSON.parse(localStorage.getItem('tanulasiAllapot')) || {}; // Kedvencek memóriája
-
-        // UI Elemek
+        this.fileSystem = {}; 
+        this.userStatus = JSON.parse(localStorage.getItem('tanulasiAllapot')) || {}; 
+        
         this.mainTabsUI = document.getElementById('mainTabs');
         this.subTabsUI = document.getElementById('subTabs');
         this.fileGridUI = document.getElementById('fileGrid');
@@ -15,23 +14,20 @@ class App {
         this.syncStatus = document.getElementById('syncStatus');
         this.searchInput = document.getElementById('searchInput');
         this.fileListTitleUI = document.getElementById('fileListTitle');
-
-        // Zoom Elemek
+        
         this.zoomLevel = 100;
         this.zoomLevelUI = document.getElementById('zoomLevel');
         this.zoomInBtn = document.getElementById('zoomIn');
         this.zoomOutBtn = document.getElementById('zoomOut');
 
-        // Hamburger menü
         this.hamburgerBtn = document.getElementById('hamburgerMenu');
         this.sidebar = document.querySelector('.resizable-sidebar');
-
-        // Állapot (State)
+        
         this.activeSubject = null;
         this.activeCategory = null;
         this.currentFilePath = null;
+        this.currentGroupBy = "default";
 
-        // Inicializálások
         this.initTheme();
         this.initZoom();
         this.initSearch();
@@ -39,7 +35,6 @@ class App {
         this.loadLocalData();
     }
 
-    // --- SEGÉDFÜGGVÉNYEK KEDVENCEKHEZ ---
     normalize(str) {
         if (!str) return '';
         let s = str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -53,14 +48,13 @@ class App {
     toggleStatus(id, type, event) {
         if (event) event.stopPropagation();
         if (!this.userStatus[id]) this.userStatus[id] = { fontos: false, kesz: false };
-
+        
         this.userStatus[id][type] = !this.userStatus[id][type];
         this.saveToLocal();
 
-        // UI azonnali frissítése
         const starElem = document.querySelector(`span.star[onclick*="${id}"]`);
         const checkElem = document.querySelector(`span.check[onclick*="${id}"]`);
-
+        
         if (starElem) starElem.classList.toggle('active', this.userStatus[id].fontos);
         if (checkElem) {
             checkElem.classList.toggle('active', this.userStatus[id].kesz);
@@ -73,27 +67,30 @@ class App {
         this.applyTableFilters();
     }
 
+    // --- JAVÍTOTT TÁBLÁZAT SZŰRŐ (KERESŐVEL) ---
     applyTableFilters() {
-        const filterFav = document.getElementById('filterFav');
-        const filterDone = document.getElementById('filterDone');
-        if (!filterFav || !filterDone) return;
-
-        const onlyFav = filterFav.checked;
-        const showDone = filterDone.checked;
+        const filterFav = document.getElementById('filterFav')?.checked;
+        const filterDone = document.getElementById('filterDone')?.checked;
+        const searchQuery = document.getElementById('tableSearchInput')?.value.toLowerCase().trim() || "";
 
         document.querySelectorAll('.data-row').forEach(row => {
             const id = row.dataset.id;
             const status = this.userStatus[id] || { fontos: false, kesz: false };
             let isVisible = true;
 
-            if (onlyFav && !status.fontos) isVisible = false;
-            if (!showDone && status.kesz) isVisible = false;
+            if (filterFav && !status.fontos) isVisible = false;
+            if (!filterDone && status.kesz) isVisible = false;
             if (row.classList.contains('hidden-by-category')) isVisible = false;
+            
+            // Keresés szöveg alapján
+            if (searchQuery) {
+                const textContent = row.textContent.toLowerCase();
+                if (!textContent.includes(searchQuery)) isVisible = false;
+            }
 
             row.classList.toggle('hidden-row', !isVisible);
         });
     }
-    // ------------------------------------
 
     initTheme() {
         const toggleBtn = document.getElementById('themeToggle');
@@ -110,8 +107,8 @@ class App {
         const savedZoom = localStorage.getItem('docZoomLevel');
         if (savedZoom) this.zoomLevel = parseInt(savedZoom, 10);
         this.updateZoomUI();
-        this.zoomInBtn.addEventListener('click', () => { if (this.zoomLevel < 250) { this.zoomLevel += 10; this.updateZoomUI(); } });
-        this.zoomOutBtn.addEventListener('click', () => { if (this.zoomLevel > 50) { this.zoomLevel -= 10; this.updateZoomUI(); } });
+        this.zoomInBtn.addEventListener('click', () => { if (this.zoomLevel < 250) { this.zoomLevel += 10; this.updateZoomUI(); }});
+        this.zoomOutBtn.addEventListener('click', () => { if (this.zoomLevel > 50) { this.zoomLevel -= 10; this.updateZoomUI(); }});
     }
 
     updateZoomUI() {
@@ -154,7 +151,7 @@ class App {
             this.fileSystem = await response.json();
             this.syncStatus.textContent = "✅ Rendszer kész";
             this.syncStatus.style.color = "var(--text-muted)";
-            this.restoreLastOpened();
+            this.restoreLastOpened(); 
         } catch (error) {
             this.syncStatus.textContent = "❌ Hiányzó adatok";
             this.syncStatus.style.color = "red";
@@ -192,7 +189,7 @@ class App {
             li.addEventListener('click', () => {
                 this.mainTabsUI.querySelectorAll('li').forEach(el => el.classList.remove('active'));
                 li.classList.add('active');
-                this.activeSubject = subject; this.activeCategory = null;
+                this.activeSubject = subject; this.activeCategory = null; 
                 this.renderSubTabs();
             });
             this.mainTabsUI.appendChild(li);
@@ -201,9 +198,9 @@ class App {
     }
 
     renderSubTabs() {
-        this.subTabsUI.innerHTML = ''; this.fileGridUI.innerHTML = '';
-        this.searchInput.value = ''; this.fileListTitleUI.textContent = 'Tételek';
-
+        this.subTabsUI.innerHTML = ''; this.fileGridUI.innerHTML = ''; 
+        this.searchInput.value = ''; this.fileListTitleUI.textContent = 'Tételek'; 
+        
         const categories = Object.keys(this.fileSystem[this.activeSubject] || {});
         if (categories.length === 0) return;
 
@@ -260,14 +257,14 @@ class App {
         card.addEventListener('click', () => {
             if (fileObj.subject && fileObj.category) {
                 this.activeSubject = fileObj.subject; this.activeCategory = fileObj.category; this.searchInput.value = '';
-                this.currentFilePath = fileObj.path; localStorage.setItem('lastOpenedFile', fileObj.path);
+                this.currentFilePath = fileObj.path; localStorage.setItem('lastOpenedFile', fileObj.path); 
                 this.renderMainTabs(); this.loadFileContent(fileObj.path, isExcel);
                 if (window.innerWidth <= 768) this.sidebar.classList.remove('open');
                 return;
             }
             document.querySelectorAll('.doc-card').forEach(c => c.classList.remove('active'));
             card.classList.add('active');
-            this.currentFilePath = fileObj.path; localStorage.setItem('lastOpenedFile', fileObj.path);
+            this.currentFilePath = fileObj.path; localStorage.setItem('lastOpenedFile', fileObj.path); 
             this.loadFileContent(fileObj.path, isExcel);
             if (window.innerWidth <= 768) this.sidebar.classList.remove('open');
         });
@@ -301,19 +298,18 @@ class App {
 
     switchFile(fileObj) {
         this.currentFilePath = fileObj.path; localStorage.setItem('lastOpenedFile', fileObj.path);
-        this.renderFileList();
+        this.renderFileList(); 
         this.loadFileContent(fileObj.path, fileObj.name.endsWith('.xlsx'));
         if (window.innerWidth <= 768) this.sidebar.classList.remove('open');
     }
 
     async loadFileContent(localPath, isExcel) {
         this.contentView.innerHTML = '<div class="welcome-msg"><h3>Tétel betöltése...</h3></div>';
-
-        // --- ÚJ LÉPÉS: Lap szélességének dinamikus állítása ---
+        
         if (isExcel) {
-            this.contentView.classList.add('table-mode'); // Széles nézet a táblázatoknak
+            this.contentView.classList.add('table-mode');
         } else {
-            this.contentView.classList.remove('table-mode'); // Normál nézet a szövegeknek
+            this.contentView.classList.remove('table-mode');
         }
 
         try {
@@ -322,9 +318,7 @@ class App {
             const arrayBuffer = await response.arrayBuffer();
             if (isExcel) this.renderExcel(arrayBuffer);
             else this.renderDocx(arrayBuffer);
-        } catch (error) {
-            this.contentView.innerHTML = `<h3 style="color:red;">Hiba a betöltéskor</h3><p>${error.message}</p>`;
-        }
+        } catch (error) { this.contentView.innerHTML = `<h3 style="color:red;">Hiba a betöltéskor</h3><p>${error.message}</p>`; }
     }
 
     renderDocx(arrayBuffer) {
@@ -334,12 +328,9 @@ class App {
         }).catch(err => { this.contentView.innerHTML = "Hiba a Word konvertálásakor."; });
     }
 
-    // --- 1. ÚJ LOGIKA: ADATOK BEMEMÓRIÁZÁSA ---
     renderExcel(arrayBuffer) {
         const data = new Uint8Array(arrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
-
-        // Nyers adatok kinyerése
         const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1, defval: "" });
 
         if (rawData.length < 2) {
@@ -348,10 +339,9 @@ class App {
         }
 
         const headers = rawData[0].map(h => String(h).trim());
-
         let currentDefaultCategory = "Egyéb";
         const parsedRows = [];
-        const defaultOrder = []; // Emlékezni fog az eredeti "9. osztályos", stb. sorrendre
+        const defaultOrder = [];
 
         for (let i = 1; i < rawData.length; i++) {
             const row = rawData[i];
@@ -370,26 +360,114 @@ class App {
             }
 
             if (!defaultOrder.includes(currentDefaultCategory)) defaultOrder.push(currentDefaultCategory);
-
-            // Eltesszük az adatot strukturáltan
-            parsedRows.push({
-                defaultCategory: currentDefaultCategory,
-                rawData: row
-            });
+            parsedRows.push({ defaultCategory: currentDefaultCategory, rawData: row });
         }
 
-        // Kimentjük a globális állapotba
-        this.currentTable = {
-            headers: headers,
-            rows: parsedRows,
-            defaultOrder: defaultOrder
-        };
-
-        // Alapértelmezett nézet kirajzolása
+        this.currentTable = { headers: headers, rows: parsedRows, defaultOrder: defaultOrder };
         this.renderGroupedTable("default");
     }
 
-    // --- GYAKORLÁS LOGIKA ---
+    renderGroupedTable(groupByColIndex) {
+        if (!this.currentTable) return;
+        this.currentGroupBy = groupByColIndex;
+
+        const headers = this.currentTable.headers;
+        const rows = this.currentTable.rows;
+        const groups = {};
+
+        rows.forEach(rowObj => {
+            let groupName = "";
+            if (groupByColIndex === "default") {
+                groupName = rowObj.defaultCategory;
+            } else {
+                let cellVal = String(rowObj.rawData[groupByColIndex] || "").trim();
+                if (cellVal === "" || cellVal === "-") {
+                    groupName = "Nincs megadva";
+                } else {
+                    if (cellVal.includes(';')) cellVal = cellVal.split(';')[0];
+                    if (cellVal.includes('/')) cellVal = cellVal.split('/')[0];
+                    cellVal = cellVal.replace(/\(.*?\)/g, '').trim();
+                    if (cellVal.length > 0) {
+                        cellVal = cellVal.charAt(0).toUpperCase() + cellVal.slice(1).toLowerCase();
+                    }
+                    const genreMapping = {
+                        "Allegórikus vers": "Dal", "Allegorikus vers": "Dal", "Bordal": "Dal",
+                        "Helyzetdal": "Dal", "Életkép": "Dal", "Programvers": "Ars poetica"
+                    };
+                    groupName = genreMapping[cellVal] || cellVal;
+                }
+            }
+            if (!groups[groupName]) groups[groupName] = [];
+            groups[groupName].push(rowObj);
+        });
+
+        let groupNames = Object.keys(groups);
+        if (groupByColIndex === "default") {
+            groupNames.sort((a, b) => this.currentTable.defaultOrder.indexOf(a) - this.currentTable.defaultOrder.indexOf(b));
+        } else {
+            groupNames.sort((a, b) => a.localeCompare(b));
+        }
+
+        let groupOptionsHTML = `<option value="default" ${groupByColIndex === 'default' ? 'selected' : ''}>Alapértelmezett (Szekciók)</option>`;
+        headers.forEach((h, idx) => {
+            if (h.length < 25 && !h.toLowerCase().includes('tartalom') && !h.toLowerCase().includes('részlet')) {
+                 groupOptionsHTML += `<option value="${idx}" ${String(groupByColIndex) === String(idx) ? 'selected' : ''}>${h}</option>`;
+            }
+        });
+
+        // --- ÚJ: KERESŐ MEZŐ A TÁBLÁZATBAN ---
+        let html = `
+            <div class="filters-container">
+                <input type="text" id="tableSearchInput" placeholder="🔍 Keresés a táblázatban..." oninput="window.appInstance.applyTableFilters()" style="padding: 0.4rem 0.8rem; border-radius: 20px; border: 1px solid var(--border); outline: none; flex: 1; min-width: 200px;">
+                <label><input type="checkbox" id="filterFav" onchange="window.appInstance.applyTableFilters()"> ⭐ Csak kedvencek</label>
+                <label><input type="checkbox" id="filterDone" checked onchange="window.appInstance.applyTableFilters()"> ✅ Készek mutatása</label>
+                <button onclick="window.appInstance.startPractice()" class="btn-practice">🎯 Gyakorlás</button>
+                <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--accent-light); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--accent);">
+                    <span style="font-weight: bold; color: var(--accent);">📂 Csoportosítás:</span>
+                    <select onchange="window.appInstance.renderGroupedTable(this.value)" style="padding: 0.3rem; border-radius: 5px; border: 1px solid var(--border); background: var(--content-bg); color: var(--text-main); font-weight: 600; cursor: pointer; outline: none;">
+                        ${groupOptionsHTML}
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive">
+            <table><thead><tr><th style="width: 85px; text-align: center;">Állapot</th>`;
+        headers.forEach(h => html += `<th>${h}</th>`);
+        html += `</tr></thead><tbody>`;
+
+        let currentCatId = 0;
+        groupNames.forEach(groupName => {
+            currentCatId++;
+            html += `<tr class="category-row" onclick="toggleCategoryRow(this, 'cat-${currentCatId}')"><td colspan="${headers.length + 1}">▼ ${groupName}</td></tr>`;
+            groups[groupName].forEach(rowObj => {
+                const row = rowObj.rawData;
+                const rowDataForId = row.slice(0, 3).join("");
+                const rowId = this.normalize(this.currentFilePath + rowDataForId).substring(0, 150);
+                const status = this.userStatus[rowId] || { fontos: false, kesz: false };
+                const catClass = `cat-${currentCatId}`;
+                const rowStyle = status.kesz ? 'opacity: 0.5; background: rgba(0,0,0,0.02);' : '';
+                html += `<tr class="data-row ${catClass}" data-id="${rowId}" style="${rowStyle}">
+                    <td class="status-cell">
+                        <span onclick="window.appInstance.toggleStatus('${rowId}', 'fontos', event)" class="star ${status.fontos ? 'active' : ''}">★</span>
+                        <span onclick="window.appInstance.toggleStatus('${rowId}', 'kesz', event)" class="check ${status.kesz ? 'active' : ''}">✔</span>
+                    </td>`;
+                headers.forEach((header, colIdx) => {
+                    let cellValue = String(row[colIdx] || "").trim();
+                    let contentHTML = cellValue || `<span style="color: var(--text-muted);">&mdash;</span>`;
+                    let tdClass = (cellValue.length > 50 || header.toLowerCase().includes('tartalom')) ? 'class="wrap-text"' : '';
+                    if (header.toLowerCase().includes('korszak') && cellValue) contentHTML = `<span class="bubble-kor">${cellValue}</span>`;
+                    if (header.toLowerCase().includes('műfaj') && cellValue) contentHTML = cellValue.split(';').map(tag => `<span class="tag-mufaj">${tag.trim()}</span>`).join(' ');
+                    if (tdClass) contentHTML = cellValue.replace(/\n/g, '<br>');
+
+                    html += `<td ${tdClass}>${contentHTML}</td>`;
+                });
+                html += `</tr>`;
+            });
+        });
+        this.contentView.innerHTML = html + `</tbody></table></div>`;
+        this.appendNavigation();
+        this.applyTableFilters();
+    }
+
     startPractice() {
         if (!this.currentTable) return;
         document.getElementById('quizModal').style.display = 'flex';
@@ -400,68 +478,83 @@ class App {
         document.getElementById('quizModal').style.display = 'none';
     }
 
-    // Segédfüggvény a műfajok/korszakok tisztításához (ugyanaz, amit a csoportosításnál használsz)
     cleanValue(val) {
         let s = String(val || "").trim();
         if (s.includes(';')) s = s.split(';')[0];
         if (s.includes('/')) s = s.split('/')[0];
         s = s.replace(/\(.*?\)/g, '').trim();
         if (s.length > 0) s = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-
-        // Műfaj összevonás (bordal -> dal, stb.)
-        const mapping = {
-            "Allegórikus vers": "Dal", "Allegorikus vers": "Dal", "Bordal": "Dal",
-            "Helyzetdal": "Dal", "Életkép": "Dal", "Programvers": "Ars poetica"
-        };
+        const mapping = { "Allegórikus vers": "Dal", "Allegorikus vers": "Dal", "Bordal": "Dal", "Helyzetdal": "Dal", "Életkép": "Dal", "Programvers": "Ars poetica" };
         return mapping[s] || s;
     }
 
     generateQuestion() {
         document.getElementById('quizNextBtn').style.display = 'none';
-        document.getElementById('verifySearchBtn').style.display = 'none';
+        const searchBtn = document.getElementById('verifySearchBtn');
+        if(searchBtn) searchBtn.style.display = 'none';
 
         const headers = this.currentTable.headers;
-        const rows = this.currentTable.rows;
 
-        const validIndices = headers.map((h, i) => {
-            const low = h.toLowerCase();
-            if (low.includes('műfaj') || low.includes('korszak') || low.includes('szerző') || low.includes('műnem')) return i;
-            return -1;
-        }).filter(i => i !== -1);
+        // --- ÚJ: FORRÁS OLVASÁSA KÖZVETLENÜL A KVÍZBŐL ---
+        const source = document.querySelector('input[name="quizSource"]:checked')?.value || 'all';
 
-        const colIndex = validIndices[Math.floor(Math.random() * validIndices.length)];
+        const availableRows = this.currentTable.rows.filter(rowObj => {
+            const rowDataForId = rowObj.rawData.slice(0, 3).join("");
+            const rowId = this.normalize(this.currentFilePath + rowDataForId).substring(0, 150);
+            const status = this.userStatus[rowId] || { fontos: false, kesz: false };
+
+            if (source === 'fav' && !status.fontos) return false;
+            return true; // Gyakorlásnál a kész tételeket is újra kérdezhetjük
+        });
+
+        if (availableRows.length < 4) {
+            alert("Nincs elég tétel a kiválasztott forrásban! Legalább 4 tétel szükséges a generáláshoz.");
+            this.closePractice();
+            return;
+        }
+
+        let colIndex = parseInt(this.currentGroupBy);
+        if (isNaN(colIndex)) {
+            const valid = headers.map((h, i) => ['műfaj', 'korszak', 'szerző', 'műnem'].some(k => h.toLowerCase().includes(k)) ? i : -1).filter(i => i !== -1);
+            colIndex = valid[Math.floor(Math.random() * valid.length)];
+        }
+        if (colIndex === undefined || colIndex === null || colIndex < 0) colIndex = 1;
+
         const headerName = headers[colIndex];
+        const allValues = availableRows.map(r => this.cleanValue(r.rawData[colIndex])).filter(v => v !== "" && v !== "Nincs megadva");
+        
+        if (allValues.length === 0) {
+            alert("Nincs elég kategorizált adat a gyakorláshoz!");
+            this.closePractice(); return;
+        }
 
-        const allValues = rows.map(r => this.cleanValue(r.rawData[colIndex])).filter(v => v !== "" && v !== "Nincs megadva" && v !== "Egyéb");
         const uniqueValues = [...new Set(allValues)];
         const targetValue = uniqueValues[Math.floor(Math.random() * uniqueValues.length)];
 
-        // Kigyűjtjük a helyes és a rossz sorokat is
-        const correctRows = rows.filter(r => this.cleanValue(r.rawData[colIndex]) === targetValue);
+        const correctRows = availableRows.filter(r => this.cleanValue(r.rawData[colIndex]) === targetValue);
         const correctRow = correctRows[Math.floor(Math.random() * correctRows.length)];
         const correctAnswer = String(correctRow.rawData[1] || correctRow.rawData[0]);
 
-        const wrongRows = rows.filter(r => this.cleanValue(r.rawData[colIndex]) !== targetValue);
+        const wrongRows = availableRows.filter(r => this.cleanValue(r.rawData[colIndex]) !== targetValue);
+        if (wrongRows.length < 3) {
+             alert("Nincs elég eltérő kategóriájú tétel a 4 opció generálásához!");
+             this.closePractice(); return;
+        }
         const shuffledWrongs = wrongRows.sort(() => 0.5 - Math.random()).slice(0, 3);
-
-        // Ez a lista tartalmazza az összes gombhoz tartozó TELJES soradatot
         const quizOptionsData = [correctRow, ...shuffledWrongs].sort(() => 0.5 - Math.random());
 
         document.getElementById('quizCategory').innerText = headerName + ":";
         document.getElementById('quizTarget').innerText = targetValue;
-        document.getElementById('quizFeedback').innerText = "";
-
-        const optionsDiv = document.getElementById('quizOptions');
-        optionsDiv.innerHTML = "";
+        document.getElementById('quizFeedback').innerHTML = "";
+        document.getElementById('quizOptions').innerHTML = "";
 
         quizOptionsData.forEach(rowObj => {
             const optText = String(rowObj.rawData[1] || rowObj.rawData[0]);
             const btn = document.createElement('button');
             btn.className = 'quiz-opt-btn';
             btn.innerText = optText;
-            // Átadjuk az összes opció adatát a kiértékeléshez
             btn.onclick = () => this.checkAnswer(btn, optText, correctAnswer, headerName, targetValue, quizOptionsData, colIndex);
-            optionsDiv.appendChild(btn);
+            document.getElementById('quizOptions').appendChild(btn);
         });
     }
 
@@ -470,48 +563,38 @@ class App {
         buttons.forEach(b => b.disabled = true);
 
         const feedbackDiv = document.getElementById('quizFeedback');
-        const aiBox = document.getElementById('aiFactCheck');
-        const aiContent = document.getElementById('aiFactContent');
-        const googleBtn = document.getElementById('googleSearchBtn');
+        const searchBtn = document.getElementById('verifySearchBtn');
 
-        // 1. Alap visszajelzés (Helyes/Helytelen)
-        let html = selected === correct
-            ? `<div style="color: #10B981; margin-bottom: 15px; font-size: 1.1rem; font-weight: bold;">🎉 Helyes válasz!</div>`
-            : `<div style="color: #EF4444; margin-bottom: 15px; font-size: 1.1rem; font-weight: bold;">❌ Sajnos nem jó...</div>`;
+        let html = selected === correct 
+            ? `<div style="color: #10B981; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;">🎉 Helyes válasz!</div>`
+            : `<div style="color: #EF4444; font-weight: bold; font-size: 1.1rem; margin-bottom: 10px;">❌ Sajnos nem jó...</div>`;
 
-        html += `<div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
-                A keresett tétel: <strong>"${correct}"</strong>, mivel ennek a tételnek a <strong>${headerName}</strong> mezője: <strong>${targetValue}</strong>.
-             </div>`;
+        html += `<p style="margin-bottom: 15px;">A keresett tétel: <strong>${correct}</strong><br>
+                 <small>Indoklás: ${headerName} = ${targetValue}</small></p>`;
 
-        // 2. Részletes lista az ÖSSZES opcióról
-        html += `<div style="text-align: left; font-size: 0.85rem;">
-                <div style="font-weight: bold; margin-bottom: 8px; color: var(--text-muted);">Az opciók elemzése:</div>`;
-
-        allOptions.forEach(rowObj => {
-            const title = String(rowObj.rawData[1] || rowObj.rawData[0]);
-            const val = this.cleanValue(rowObj.rawData[colIndex]);
+        html += `<div style="margin-top: 15px; font-size: 0.9rem; font-weight: bold;">Az opciók elemzése:</div>`;
+        
+        allOptions.forEach(row => {
+            const title = String(row.rawData[1] || row.rawData[0]);
+            const val = this.cleanValue(row.rawData[colIndex]);
             const isCorrect = (title === correct);
-
-            html += `<div class="quiz-explanation-item ${isCorrect ? 'correct-border' : 'wrong-border'}">
-                    <strong>${title}</strong><br>
-                    <span style="color: var(--text-muted);">${headerName}:</span> ${val}
-                 </div>`;
+            const icon = isCorrect ? '✅' : '❌';
+            const color = isCorrect ? '#10B981' : 'inherit';
+            
+            // --- JAVÍTOTT: NINCS VONAL, egyszerű szöveges felsorolás ---
+            html += `
+                <div class="quiz-explanation-item" style="color: ${color};">
+                    <strong>${title}</strong> — ${headerName}: ${val} ${icon}
+                </div>`;
         });
-        html += `</div>`;
         feedbackDiv.innerHTML = html;
 
-        // 3. AI Fact-Check blokk megjelenítése és finomított keresés
-        if (aiBox) {
-            aiBox.style.display = 'block';
-            aiContent.innerHTML = `Az irodalomtörténeti konszenzus alapján <strong>${correct}</strong> és a(z) <strong>${targetValue}</strong> kapcsolata egyértelmű. Ez az összefüggés gyakori érettségi pont, érdemes megjegyezni a stílusjegyek és a szerzői korszak alapján.`;
-
-            // Finomított keresési szöveg: "Mű címe" + "oszlopnév" + "elemzés irodalom"
-            const cleanSearchQuery = encodeURIComponent(`${correct} ${headerName} elemzés irodalom`);
-            googleBtn.href = `https://www.google.com/search?q=${cleanSearchQuery}`;
-            googleBtn.innerHTML = `🔍 Ellenőrzés: "${correct} ${headerName}"`;
+        if (searchBtn) {
+            const cleanQuery = encodeURIComponent(`${correct} ${headerName} elemzés irodalom`);
+            searchBtn.href = `https://www.google.com/search?q=${cleanQuery}`;
+            searchBtn.style.display = 'flex';
         }
 
-        // Gombok színezése
         if (selected === correct) btn.classList.add('correct');
         else {
             btn.classList.add('wrong');
@@ -520,159 +603,18 @@ class App {
 
         document.getElementById('quizNextBtn').style.display = 'flex';
     }
-
-    // --- 2. ÚJ LOGIKA: DINAMIKUS CSOPORTOSÍTÁS ÉS HTML KIRAJZOLÁS ---
-    renderGroupedTable(groupByColIndex) {
-        if (!this.currentTable) return;
-
-        const headers = this.currentTable.headers;
-        const rows = this.currentTable.rows;
-        const groups = {};
-
-        // Adatok szétválogatása a kért szempont szerint
-        rows.forEach(rowObj => {
-            let groupName = "";
-
-            if (groupByColIndex === "default") {
-                groupName = rowObj.defaultCategory;
-            } else {
-                let cellVal = String(rowObj.rawData[groupByColIndex] || "").trim();
-                if (cellVal === "" || cellVal === "-") cellVal = "Nincs megadva";
-
-                // Ha több műfaj van (pl. "Regény; Novella"), az elsőt vesszük fő csoportnak
-                if (cellVal.includes(';')) {
-                    cellVal = cellVal.split(';')[0].trim();
-                }
-                groupName = cellVal;
-            }
-
-            if (!groups[groupName]) groups[groupName] = [];
-            groups[groupName].push(rowObj);
-        });
-
-        // Csoportok sorbarendezése
-        let groupNames = Object.keys(groups);
-        if (groupByColIndex === "default") {
-            // Eredeti sorrend (pl. 9. osztály, 10. osztály)
-            groupNames.sort((a, b) => this.currentTable.defaultOrder.indexOf(a) - this.currentTable.defaultOrder.indexOf(b));
-        } else {
-            // ABC sorrend (pl. Műfajoknál: Dráma, Epika, Líra)
-            groupNames.sort((a, b) => a.localeCompare(b));
-        }
-
-        // Legördülő menü (Select) felépítése a fejlécekből
-        let groupOptionsHTML = `<option value="default" ${groupByColIndex === 'default' ? 'selected' : ''}>Alapértelmezett (Szekciók)</option>`;
-        headers.forEach((h, idx) => {
-            // Hosszú szöveges oszlopokra ne lehessen csoportosítani
-            if (h.length < 25 && !h.toLowerCase().includes('tartalom') && !h.toLowerCase().includes('részlet')) {
-                groupOptionsHTML += `<option value="${idx}" ${String(groupByColIndex) === String(idx) ? 'selected' : ''}>${h}</option>`;
-            }
-        });
-
-        // Fejléc és Szűrők generálása
-        let html = `
-            <div class="filters-container" style="align-items: center;">
-                <label><input type="checkbox" id="filterFav" onchange="window.appInstance.applyTableFilters()"> ⭐ Csak kedvencek</label>
-                <label><input type="checkbox" id="filterDone" checked onchange="window.appInstance.applyTableFilters()"> ✅ Készek mutatása</label>
-                
-                <button onclick="window.appInstance.startPractice()" class="btn-practice" style="margin-left: 15px;">
-                    🎯 Gyakorlás
-                </button>
-
-                <div style="margin-left: auto; display: flex; align-items: center; gap: 0.5rem; background: var(--accent-light); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--accent);">
-                    <span style="font-weight: bold; color: var(--accent);">📂 Csoportosítás:</span>
-                    <select onchange="window.appInstance.renderGroupedTable(this.value)" style="padding: 0.3rem; border-radius: 5px; border: 1px solid var(--border); background: var(--content-bg); color: var(--text-main); font-weight: 600; cursor: pointer; outline: none;">
-                        ${groupOptionsHTML}
-                    </select>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-            <table><thead><tr>
-            <th style="width: 85px; text-align: center;">Állapot</th>
-        `;
-        headers.forEach(h => html += `<th>${h}</th>`);
-        html += `</tr></thead><tbody>`;
-
-        let currentCatId = 0;
-
-        // Adatsorok legenerálása csoportonként
-        groupNames.forEach(groupName => {
-            currentCatId++;
-
-            // Kategória (Csoport) sor nyomtatása
-            html += `<tr class="category-row" onclick="toggleCategoryRow(this, 'cat-${currentCatId}')">
-                <td colspan="${headers.length + 1}">▼ ${groupName}</td>
-            </tr>`;
-
-            groups[groupName].forEach(rowObj => {
-                const row = rowObj.rawData;
-
-                // --- KEDVENCEK JAVÍTOTT AZONOSÍTÓJA ---
-                const rowDataForId = row.slice(0, 3).join("");
-                const rowId = this.normalize(this.currentFilePath + rowDataForId).substring(0, 150);
-
-                if (!this.userStatus[rowId]) {
-                    this.userStatus[rowId] = { fontos: false, kesz: false };
-                }
-                const status = this.userStatus[rowId];
-
-                const catClass = `cat-${currentCatId}`;
-                const rowStyle = status.kesz ? 'opacity: 0.5; background: rgba(0,0,0,0.02);' : '';
-
-                html += `<tr class="data-row ${catClass}" data-id="${rowId}" style="${rowStyle}">`;
-
-                html += `<td class="status-cell">
-                    <span onclick="window.appInstance.toggleStatus('${rowId}', 'fontos', event)" class="star ${status.fontos ? 'active' : ''}">★</span>
-                    <span onclick="window.appInstance.toggleStatus('${rowId}', 'kesz', event)" class="check ${status.kesz ? 'active' : ''}">✔</span>
-                </td>`;
-
-                headers.forEach((header, colIdx) => {
-                    let cellValue = String(row[colIdx] !== undefined ? row[colIdx] : "").trim();
-                    let contentHTML = cellValue;
-                    let lowerHeader = header.toLowerCase();
-                    let tdClass = "";
-
-                    if (cellValue === "" || cellValue === "-") {
-                        contentHTML = `<span style="color: var(--text-muted);">&mdash;</span>`;
-                    } else if (lowerHeader.includes('korszak')) {
-                        contentHTML = `<span class="bubble-kor">${cellValue}</span>`;
-                    } else if (lowerHeader.includes('műfaj')) {
-                        contentHTML = cellValue.split(';').map(tag => `<span class="tag-mufaj">${tag.trim()}</span>`).join(' ');
-                    } else if (cellValue.length > 50 || lowerHeader.includes('tartalom') || lowerHeader.includes('részlet')) {
-                        contentHTML = cellValue.replace(/\n/g, '<br>');
-                        tdClass = 'class="wrap-text"';
-                    }
-
-                    html += `<td ${tdClass}>${contentHTML}</td>`;
-                });
-                html += `</tr>`;
-            });
-        });
-
-        html += `</tbody></table></div>`;
-        this.contentView.innerHTML = html;
-        this.appendNavigation();
-        this.applyTableFilters();
-    }
 }
 
-// ==========================================
-// GLOBÁLIS FÜGGVÉNYEK (HTML Onclick eseményekhez)
-// ==========================================
-window.toggleCategoryRow = function (rowElement, catGroupId) {
+window.toggleCategoryRow = function(rowElement, catGroupId) {
     rowElement.classList.toggle('collapsed');
     const isCollapsed = rowElement.classList.contains('collapsed');
-
     rowElement.closest('table').querySelectorAll(`.${catGroupId}`).forEach(r => {
         if (isCollapsed) r.classList.add('hidden-by-category');
         else r.classList.remove('hidden-by-category');
     });
-    // Újraértékeljük a szűrőket (hogy ne mutasson rejtett kategóriában lévő kedvencet)
-    window.appInstance.applyTableFilters();
+    window.appInstance.applyTableFilters(); 
 }
 
-// App indítása és globális hozzáférés biztosítása
 document.addEventListener('DOMContentLoaded', () => {
     window.appInstance = new App();
 });
